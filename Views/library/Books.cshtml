@@ -1,0 +1,136 @@
+﻿@model List<DigitalLibrarySystem.Models.Book>
+@{
+    ViewData["Title"] = "All Books";
+    ViewData["ActivePage"] = "books";
+}
+
+<div class="page-header">
+    <h1>🗂️ All Books</h1>
+    <p>Library ki saari books — QR image pe click karo print karne ke liye</p>
+</div>
+
+<div class="search-bar">
+    <form method="get" asp-action="Books" style="display:flex;gap:10px;width:100%">
+        <input class="input-bare" name="search" value="@ViewBag.Search"
+               placeholder="Title, author ya QR code se dhundho..." style="max-width:400px" />
+        <button type="submit" class="btn-primary">🔍 Search</button>
+        @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+        {
+            <a asp-action="Books" class="btn-secondary">✖ Clear</a>
+        }
+    </form>
+</div>
+
+<div style="display:flex;gap:12px;margin-bottom:20px">
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;
+              padding:8px 16px;font-size:13px">
+        <span style="color:var(--muted)">Total: </span><strong>@Model.Count</strong>
+    </div>
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;
+              padding:8px 16px;font-size:13px">
+        <span style="color:var(--muted)">Available: </span>
+        <strong style="color:var(--green)">@Model.Count(b => b.IsAvailable)</strong>
+    </div>
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;
+              padding:8px 16px;font-size:13px">
+        <span style="color:var(--muted)">Issued: </span>
+        <strong style="color:var(--orange)">@Model.Count(b => !b.IsAvailable)</strong>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Title &amp; Author</th>
+                <th>ISBN</th>
+                <th>Category</th>
+                <th>QR Code</th>
+                <th>QR Image</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var b in Model)
+            {
+                <tr>
+                    <td style="color:var(--muted);font-size:12px">@b.BookID</td>
+                    <td>
+                        <strong>@b.Title</strong><br>
+                        <span style="font-size:12px;color:var(--muted)">
+                            @b.Author &nbsp;·&nbsp; @(b.Publisher ?? "—")
+                        </span>
+                    </td>
+                    <td style="font-family:monospace;font-size:12px">@b.ISBN</td>
+                    <td>
+                        @if (b.Category != null)
+                        {
+                            <span style="background:var(--orange-glow);color:var(--orange);
+                                   padding:3px 8px;border-radius:4px;font-size:11px">@b.Category</span>
+                        }
+                    </td>
+                    <td><span class="book-card-qr">@b.QRCode</span></td>
+                    <td>
+                        <img src="/Library/GenerateQR?code=@b.QRCode" alt="QR"
+                             style="width:52px;height:52px;border-radius:4px;
+                            background:white;cursor:pointer"
+                             onclick="showQR('@b.QRCode','@b.Title')" title="Click to enlarge" />
+                    </td>
+                    <td>
+                        @if (b.IsAvailable)
+                        {
+                            <span class="status-badge available">
+                                <span class="status-dot"></span>Available
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="status-badge issued">
+                                <span class="status-dot"></span>Issued
+                            </span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- QR Modal -->
+<div id="qrModal" onclick="closeQR()"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);
+            z-index:9000;align-items:center;justify-content:center">
+    <div onclick="event.stopPropagation()"
+         style="background:var(--card);border:1px solid var(--border);
+              border-radius:var(--radius);padding:32px;text-align:center;max-width:300px">
+        <div id="qrTitle" style="font-family:'Rajdhani',sans-serif;font-size:17px;
+                              font-weight:700;margin-bottom:16px"></div>
+        <div style="background:white;padding:16px;border-radius:8px;display:inline-block">
+            <img id="qrImg" src="" style="width:180px;height:180px;display:block" />
+        </div>
+        <div id="qrCode" style="font-family:monospace;color:var(--orange);
+                             margin-top:12px;font-size:14px"></div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px">
+            Right-click → Save karke print karo
+        </p>
+        <button class="btn-secondary" onclick="closeQR()"
+                style="margin-top:16px;width:100%;justify-content:center">
+            ✖ Band karo
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showQR(code,title){
+          document.getElementById('qrTitle').textContent = title;
+          document.getElementById('qrImg').src = '/Library/GenerateQR?code='+code;
+          document.getElementById('qrCode').textContent = code;
+          document.getElementById('qrModal').style.display = 'flex';
+        }
+        function closeQR(){
+          document.getElementById('qrModal').style.display = 'none';
+        }
+    </script>
+}

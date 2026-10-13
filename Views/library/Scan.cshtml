@@ -1,0 +1,151 @@
+﻿@{
+    ViewData["Title"] = "Scan QR";
+    ViewData["Page"] = "scan";
+}
+
+@section Scripts {
+    <script src="~/js/jsQR.js"></script>
+    <script>
+        let video, canvas, ctx, scanning = true;
+
+        window.addEventListener('DOMContentLoaded', startScanner);
+
+        async function startScanner() {
+          video  = document.getElementById('qr-video');
+          canvas = document.getElementById('qr-canvas');
+          ctx    = canvas.getContext('2d');
+
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            video.srcObject = stream;
+            await video.play();
+            setStatus('🟣 Camera active — point at QR code', 'purple');
+            requestAnimationFrame(scanFrame);
+          } catch(e) {
+            setStatus('❌ Camera not available. Use Manual Entry below.', 'red');
+          }
+        }
+
+        function scanFrame() {
+          if (!scanning) return;
+
+          if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+            canvas.width  = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+            if (code && code.data) {
+              scanning = false;
+              setStatus('✅ Scanned: ' + code.data, 'green');
+              lookupBook(code.data.trim().toUpperCase());
+              return;
+            }
+          }
+          requestAnimationFrame(scanFrame);
+        }
+
+        function setStatus(msg, color) {
+          const el = document.getElementById('scan-status');
+          el.textContent = msg;
+          el.style.color = color === 'green' ? 'var(--green)'
+                         : color === 'red'   ? 'var(--red)'
+                         : 'var(--purple3)';
+        }
+
+        async function lookupBook(qrCode) {
+          const panel = document.getElementById('book-panel');
+          panel.style.display = 'block';
+          panel.innerHTML = `<div class="card"><div class="card-title"><div class="dot"></div>Searching...</div></div>`;
+
+          try {
+            const res = await fetch('/Library/ProcessQR', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ QRCode: qrCode })
+            });
+
+            if (!res.ok) {
+              panel.innerHTML = `<div class="alert-error">⚠️ Server error (${res.status}). Check ProcessQR action exists.</div>`;
+              return;
+            }
+
+            const data = await res.json();
+
+            if (!data.success) {
+              panel.innerHTML = `<div class="alert-error">⚠️ ${data.message}</div>`;
+              return;
+            }
+
+            panel.innerHTML = `
+              <div class="card" style="margin-bottom:14px;">
+                <div class="card-title"><div class="dot"></div>Book Found</div>
+                <div class="book-result-row"><span class="rl">Title</span><span class="rv">${data.title}</span></div>
+                <div class="book-result-row"><span class="rl">Author</span><span class="rv">${data.author}</span></div>
+                <div class="book-result-row"><span class="rl">Publisher</span><span class="rv">${data.publisher}</span></div>
+                <div class="book-result-row"><span class="rl">QR Code</span>
+                  <span class="rv" style="color:var(--purple3)">${data.qrCode}</span></div>
+              </div>
+              <form method="post" action="/Library/IssueBook">
+                <input type="hidden" name="bookID" value="${data.bookID}" />
+                <button type="submit" class="btn-primary" style="width:100%;">✅ Issue This Book</button>
+              </form>`;
+          } catch (err) {
+            panel.innerHTML = `<div class="alert-error">⚠️ Network/JS error: ${err.message}</div>`;
+          }
+        }
+
+        async function manualLookup() {
+          const code = document.getElementById('manual-input').value.trim().toUpperCase();
+          if (!code) { alert('Please enter a QR code e.g. BOOK001'); return; }
+          await lookupBook(code);
+        }
+
+        // Allow Enter key in manual input
+        document.addEventListener('DOMContentLoaded', () => {
+          document.getElementById('manual-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); manualLookup(); }
+          });
+        });
+    </script>
+}
+
+<div class="page-header">
+    <h1>📷 Scan QR Code</h1>
+    <p>Point your camera at the book's QR label, or use manual entry</p>
+</div>
+
+<div class="scan-grid">
+    <div>
+        <div class="card" style="padding:16px;">
+            <div class="qr-video-wrap">
+                <video id="qr-video" style="width:100%;border-radius:10px;" autoplay muted playsinline></video>
+                <canvas id="qr-canvas" style="display:none;"></canvas>
+                <div class="qr-frame"></div>
+            </div>
+            <div id="scan-status" class="scan-status">Starting camera...</div>
+        </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="card">
+            <div class="card-title"><div class="dot"></div>Manual Entry</div>
+            <p style="color:var(--muted);font-size:12px;margin-bottom:12px;">
+                Type the QR code printed on the book
+            </p>
+            <div class="input-row">
+                <input id="manual-input" class="form-input" type="text"
+                       placeholder="e.g. BOOK001" style="text-transform:uppercase;" />
+                <button class="btn-primary" type="button" onclick="manualLookup()">🔍</button>
+            </div>
+            <div style="margin-top:12px;padding:10px;background:rgba(139,92,246,0.05);
+                  border-radius:8px;font-size:11px;color:var(--muted);">
+                📚 Available codes: BOOK001 · BOOK002 · BOOK003 · BOOK004 · BOOK005
+            </div>
+        </div>
+
+        <div id="book-panel" style="display:none;"></div>
+    </div>
+</div>

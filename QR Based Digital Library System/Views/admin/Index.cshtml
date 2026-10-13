@@ -1,0 +1,122 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Page"] = "admin";
+}
+
+<div class="page-header">
+    <h1>🛡️ Librarian Dashboard</h1>
+    <p>Full circulation overview</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px;">
+    <div class="stat-card">
+        <div class="stat-icon">📖</div>
+        <div class="stat-value">@ViewBag.TotalIssued</div>
+        <div class="stat-label">Total Issued</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-value" style="color:var(--red);">@ViewBag.Overdue</div>
+        <div class="stat-label">Overdue Books</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value">@ViewBag.ActiveBorrowers</div>
+        <div class="stat-label">Active Borrowers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value" style="color:var(--orange);">Rs @ViewBag.TotalFines</div>
+        <div class="stat-label">Fine Collection</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-value" style="color:var(--green);">@ViewBag.TotalBooks</div>
+        <div class="stat-label">Active Inventory</div>
+    </div>
+</div>
+
+<!-- Assignment 3: Analytics Dashboard Card -->
+<div style="margin-bottom:20px; padding:20px; background:linear-gradient(135deg,#1f2937,#111827); border:1px solid #3b82f6; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
+    <div>
+        <div style="font-size:1.4rem; font-weight:700; color:#60a5fa;">📊 Analytics Dashboard</div>
+        <div style="color:#9ca3af; margin-top:4px; font-size:0.9rem;">
+            Most active students &nbsp;|&nbsp; Popular books &nbsp;|&nbsp; Fine trends &nbsp;|&nbsp; Department stats &nbsp;|&nbsp; Activity logs
+        </div>
+        <div style="margin-top:8px;">
+            <span style="background:#1d4ed8; color:white; padding:3px 10px; border-radius:20px; font-size:0.75rem;">Assignment 3 Feature</span>
+        </div>
+    </div>
+    <a href="/Analytics/Index" style="text-decoration:none;">
+        <button style="background:#2563eb; color:white; border:none; padding:12px 28px; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer;">
+            View Analytics →
+        </button>
+    </a>
+</div>
+
+<!-- Most Borrowed + Daily Transactions -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+    <div class="card">
+        <div class="card-title"><div class="dot"></div>📚 Most Borrowed Books</div>
+        @foreach (var b in ViewBag.MostBorrowed)
+        {
+            <div class="book-result-row">
+                <span class="rl">@b.Title</span>
+                <span class="rv">@b.Count times</span>
+            </div>
+        }
+    </div>
+    <div class="card">
+        <div class="card-title"><div class="dot"></div>📅 Daily Transactions (Last 7 Days)</div>
+        @foreach (var d in ViewBag.DailyTx)
+        {
+            <div class="book-result-row">
+                <span class="rl">@d.Date.ToString("dd MMM yyyy")</span>
+                <span class="rv">@d.Count transactions</span>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Defaulters -->
+<div class="card">
+    <div class="card-title"><div class="dot"></div>🚨 Defaulters List (Overdue)</div>
+    @if (((List<DigitalLibrarySystem.Models.Transaction>)ViewBag.Defaulters).Count == 0)
+    {
+        <p style="color:var(--muted);">No overdue books right now. ✅</p>
+    }
+    else
+    {
+        <table class="lib-table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Book</th>
+                    <th>Due Date</th>
+                    <th>Days Overdue</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var tx in (List<DigitalLibrarySystem.Models.Transaction>)ViewBag.Defaulters)
+                {
+                    <tr>
+                        <td>@tx.Student.FullName</td>
+                        <td>@tx.Book.Title</td>
+                        <td>@tx.DueDate.ToString("dd MMM yyyy")</td>
+                        <td style="color:var(--red);font-weight:600;">
+                            @((DateTime.Now.Date - tx.DueDate.Date).Days) days
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<!-- Reports Button -->
+<div style="margin-top:20px;">
+    <a asp-controller="Admin" asp-action="Reports" style="text-decoration:none;">
+        <button class="btn-primary">📋 View Full Reports</button>
+    </a>
+</div>

@@ -1,0 +1,181 @@
+﻿@{
+    ViewData["Title"] = "Book Recommendations";
+    Layout = null;
+    int studentId = ViewBag.StudentID;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Book Recommendations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #0d1117;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .page-title {
+            color: #58a6ff;
+            font-weight: 700;
+            font-size: 1.6rem;
+        }
+
+        .book-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+
+            .book-card:hover {
+                border-color: #58a6ff;
+            }
+
+        .book-title {
+            color: #58a6ff;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .book-author {
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+
+        .category-badge {
+            background: #1f6feb;
+            color: white;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .score-badge {
+            background: #238636;
+            color: white;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .ai-label {
+            background: linear-gradient(135deg, #1f6feb, #8957e5);
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #58a6ff;
+            text-decoration: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8b949e;
+        }
+
+        .rank-num {
+            width: 36px;
+            height: 36px;
+            background: #1f6feb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4" style="max-width:800px;">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <div class="page-title">🤖 AI Book Recommendations</div>
+                <small style="color:#8b949e">Based on your borrowing history</small>
+            </div>
+            <a href="/Dashboard/Index" class="back-btn">← Back</a>
+        </div>
+
+        <div style="background:#161b22; border:1px solid #30363d; border-radius:12px; padding:16px; margin-bottom:24px;">
+            <div class="d-flex align-items-center gap-3">
+                <span style="font-size:2rem;">🧠</span>
+                <div>
+                    <div style="color:#58a6ff; font-weight:600;">How AI Recommendations Work</div>
+                    <div style="color:#8b949e; font-size:0.88rem;">
+                        The system analyzes your borrowing history, finds your top genres,
+                        then suggests popular books in those genres that you have not read yet.
+                    </div>
+                </div>
+                <span class="ai-label ms-auto">AI Powered</span>
+            </div>
+        </div>
+
+        <div id="loadingState" class="empty-state">
+            <div style="font-size:2rem;">⏳</div>
+            <div>Finding best books for you...</div>
+        </div>
+
+        <div id="recommendationsList" style="display:none;"></div>
+
+        <div id="emptyState" class="empty-state" style="display:none;">
+            <div style="font-size:3rem;">📚</div>
+            <div style="font-size:1.1rem; margin-top:12px;">No recommendations yet</div>
+            <div style="margin-top:8px;">Borrow some books first — AI will learn your preferences!</div>
+        </div>
+
+    </div>
+
+    <script>
+        fetch('/Recommendation/ForStudent/@studentId')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('loadingState').style.display = 'none';
+
+                if (!data || data.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                let html = '';
+                data.forEach((book, i) => {
+                    html += `
+                    <div class="book-card">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="rank-num">${i + 1}</div>
+                            <div style="flex:1;">
+                                <div class="book-title">${book.title}</div>
+                                <div class="book-author">by ${book.author}</div>
+                                <div class="d-flex gap-2 mt-2 flex-wrap">
+                                    <span class="category-badge">📂 ${book.category}</span>
+                                    <span class="score-badge">🔥 ${book.score} borrows</span>
+                                </div>
+                            </div>
+                            <div style="color:#8b949e; font-size:0.8rem;">Book #${book.bookID}</div>
+                        </div>
+                    </div>`;
+                });
+
+                document.getElementById('recommendationsList').innerHTML = html;
+                document.getElementById('recommendationsList').style.display = 'block';
+            })
+            .catch(() => {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+            });
+    </script>
+</body>
+</html>

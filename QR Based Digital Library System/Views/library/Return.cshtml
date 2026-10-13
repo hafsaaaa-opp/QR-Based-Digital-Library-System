@@ -1,0 +1,106 @@
+﻿@{
+    ViewData["Title"] = "Return Book";
+    ViewData["Page"] = "return";
+}
+
+@section Scripts {
+    <script src="~/js/jsQR.js"></script>
+    <script>
+        let video, canvas, ctx, scanning = true;
+        window.addEventListener('DOMContentLoaded', startScanner);
+
+        async function startScanner() {
+          video = document.getElementById('ret-video');
+          canvas = document.getElementById('ret-canvas');
+          ctx = canvas.getContext('2d');
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            video.srcObject = stream;
+            await video.play();
+            requestAnimationFrame(scanFrame);
+          } catch(e) {
+            document.getElementById('ret-status').textContent = '❌ Camera not available — use manual entry below';
+          }
+        }
+
+        function scanFrame() {
+          if (!scanning) return;
+          if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            if (code && code.data) {
+              scanning = false;
+              processReturn(code.data.trim().toUpperCase());
+              return;
+            }
+          }
+          requestAnimationFrame(scanFrame);
+        }
+
+        async function processReturn(qrCode) {
+          document.getElementById('ret-status').textContent = '🔍 Processing...';
+          const res = await fetch('/Library/ProcessReturnQR', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ QRCode: qrCode })
+          });
+          const data = await res.json();
+          const panel = document.getElementById('result-panel');
+          panel.style.display = 'block';
+
+          if (!data.success) {
+            panel.innerHTML = `<div class="alert-error">⚠️ ${data.message}</div>`;
+          } else {
+            panel.innerHTML = `<div class="alert-success">✅ "${data.title}" returned! ${data.fine > 0 ? `Fine: Rs ${data.fine}` : 'No fine.'}</div>`;
+          }
+        }
+
+        async function manualReturn() {
+          const txId = document.getElementById('manual-tx').value.trim();
+          if (!txId) { alert('Enter Transaction ID'); return; }
+          document.getElementById('manual-form').submit();
+        }
+    </script>
+}
+
+<div class="page-header">
+    <h1>↩️ Return a Book</h1>
+    <p>Scan QR code or enter Transaction ID manually</p>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success">✅ @TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert-error">⚠️ @TempData["Error"]</div>
+}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="card" style="padding:16px;">
+        <div class="card-title"><div class="dot"></div>📷 Scan QR to Return</div>
+        <div class="qr-video-wrap">
+            <video id="ret-video" style="width:100%;border-radius:10px;" autoplay muted playsinline></video>
+            <canvas id="ret-canvas" style="display:none;"></canvas>
+            <div class="qr-frame"></div>
+        </div>
+        <div id="ret-status" class="scan-status">Starting camera...</div>
+        <div id="result-panel" style="display:none;margin-top:12px;"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title"><div class="dot"></div>Manual Entry</div>
+        <form id="manual-form" method="post" asp-action="ReturnBook">
+            <div class="form-group" style="margin-bottom:16px;">
+                <label class="form-label">Transaction ID</label>
+                <input id="manual-tx" class="form-input" type="text" name="transactionID"
+                       placeholder="e.g. TRX638884578901" required />
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%;">↩️ Return Book</button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,44 @@
+﻿@model IEnumerable<DigitalLibrarySystem.Models.Transaction>
+@{
+    ViewData["Title"] = "Reports";
+    ViewData["Page"] = "admin";
+}
+
+<div class="page-header">
+    <h1>📊 Full Transaction Reports</h1>
+    <p>Complete circulation history</p>
+</div>
+
+<div class="card">
+    <table class="lib-table">
+        <thead>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Student</th>
+                <th>Book</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th>Return Date</th>
+                <th>Fine</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var t in Model)
+            {
+                <tr>
+                    <td style="font-size:11px;color:var(--purple3);">@t.TransactionID</td>
+                    <td>@t.Student.FullName</td>
+                    <td>@t.Book.Title</td>
+                    <td>@t.IssueDate.ToString("dd MMM yyyy")</td>
+                    <td>@t.DueDate.ToString("dd MMM yyyy")</td>
+                    <td>@(t.ReturnDate.HasValue? t.ReturnDate.Value.ToString("dd MMM yyyy") : "—")</td>
+                    <td style="color:@(t.FineAmount > 0 ? "var(--red)" : "var(--green)");">
+                        Rs @t.FineAmount
+                    </td>
+                    <td><span class="badge badge-@t.Status.ToLower()">@t.Status</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

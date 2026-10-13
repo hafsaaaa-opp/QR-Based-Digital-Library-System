@@ -1,0 +1,50 @@
+﻿/* Add these to your existing CSS */
+.scan-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.qr-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    position: relative;
+}
+
+.qr-frame {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 60px;
+    border: 2px solid var(--orange);
+    border-radius: 12px;
+    pointer-events: none;
+}
+
+.scan-status {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--orange);
+}
+
+.alert-error {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid var(--red);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--red);
+    margin-bottom: 16px;
+}
+
+.alert-success {
+    background: rgba(34,197,94,0.1);
+    border: 1px solid var(--green);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--green);
+    margin-bottom: 16px;
+}

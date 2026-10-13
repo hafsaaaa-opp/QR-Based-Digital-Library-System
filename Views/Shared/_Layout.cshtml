@@ -1,0 +1,560 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] — QR Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0a0f;
+            --card: rgba(255,255,255,0.03);
+            --card2: rgba(255,255,255,0.05);
+            --border: rgba(139,92,246,0.2);
+            --purple: #7c3aed;
+            --purple2: #6d28d9;
+            --purple3: #a78bfa;
+            --text: #e2e8f0;
+            --muted: rgba(148,163,184,0.5);
+            --red: #f87171;
+            --green: #4ade80;
+            --orange: #fb923c;
+            --radius: 14px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 230px;
+            min-height: 100vh;
+            background: rgba(255,255,255,0.02);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 20px 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+
+        .sidebar-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--purple), var(--purple2));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 4px 16px rgba(124,58,237,0.4);
+        }
+
+        .sidebar-brand-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+
+            .sidebar-brand-name span {
+                color: var(--purple3);
+            }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 0 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+            .nav-item:hover {
+                background: rgba(139,92,246,0.1);
+                color: var(--purple3);
+            }
+
+            .nav-item.active {
+                background: rgba(139,92,246,0.15);
+                color: var(--purple3);
+                border: 1px solid rgba(139,92,246,0.25);
+            }
+
+            .nav-item .ni {
+                font-size: 16px;
+            }
+
+        .sidebar-bottom {
+            padding: 16px 12px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            color: rgba(248,113,113,0.7);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+            .logout-btn:hover {
+                background: rgba(239,68,68,0.1);
+                color: var(--red);
+            }
+
+        .main-wrap {
+            flex: 1;
+            margin-left: 230px;
+            min-height: 100vh;
+            padding: 32px;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+            .page-header h1 {
+                font-size: 22px;
+                font-weight: 700;
+                color: #fff;
+            }
+
+            .page-header p {
+                color: var(--muted);
+                font-size: 13px;
+                margin-top: 4px;
+            }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--purple3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--purple3);
+            border-radius: 50%;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .stat-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: linear-gradient(90deg, var(--purple), var(--purple3));
+            }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .stat-icon {
+            font-size: 28px;
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            opacity: 0.3;
+        }
+
+        .lib-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .lib-table th {
+                font-size: 11px;
+                color: var(--purple3);
+                letter-spacing: 1px;
+                text-transform: uppercase;
+                padding: 10px 14px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .lib-table td {
+                padding: 12px 14px;
+                font-size: 13px;
+                color: var(--text);
+                border-bottom: 1px solid rgba(139,92,246,0.08);
+            }
+
+            .lib-table tr:hover td {
+                background: rgba(139,92,246,0.04);
+            }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-issued {
+            background: rgba(167,139,250,0.15);
+            color: var(--purple3);
+            border: 1px solid rgba(167,139,250,0.3);
+        }
+
+        .badge-returned {
+            background: rgba(74,222,128,0.1);
+            color: var(--green);
+            border: 1px solid rgba(74,222,128,0.3);
+        }
+
+        .badge-overdue {
+            background: rgba(248,113,113,0.1);
+            color: var(--red);
+            border: 1px solid rgba(248,113,113,0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--purple), var(--purple2));
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 16px rgba(109,40,217,0.35);
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 8px 24px rgba(109,40,217,0.5);
+            }
+
+        .btn-ghost {
+            background: rgba(139,92,246,0.1);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--purple3);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .btn-ghost:hover {
+                background: rgba(139,92,246,0.2);
+            }
+
+        .alert-error {
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--red);
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .alert-success {
+            background: rgba(74,222,128,0.08);
+            border: 1px solid rgba(74,222,128,0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--green);
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--purple3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 7px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+            .form-input::placeholder {
+                color: rgba(148,163,184,0.35);
+            }
+
+            .form-input:focus {
+                border-color: rgba(139,92,246,0.6);
+                background: rgba(139,92,246,0.05);
+                box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+            }
+
+        .scan-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .qr-video-wrap {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 1;
+        }
+
+            .qr-video-wrap video {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .qr-frame {
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            right: 15%;
+            bottom: 15%;
+            border: 2px solid var(--purple3);
+            border-radius: 12px;
+        }
+
+            .qr-frame::before, .qr-frame::after {
+                content: '';
+                position: absolute;
+                width: 20px;
+                height: 20px;
+                border-color: var(--purple3);
+                border-style: solid;
+            }
+
+            .qr-frame::before {
+                top: -2px;
+                left: -2px;
+                border-width: 3px 0 0 3px;
+            }
+
+            .qr-frame::after {
+                bottom: -2px;
+                right: -2px;
+                border-width: 0 3px 3px 0;
+            }
+
+        .scan-status {
+            text-align: center;
+            font-size: 12px;
+            color: var(--purple3);
+            margin-top: 10px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .book-result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(139,92,246,0.08);
+            font-size: 13px;
+        }
+
+            .book-result-row:last-child {
+                border: none;
+            }
+
+        .rl {
+            color: var(--muted);
+        }
+
+        .rv {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(139,92,246,0.1);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 6px 14px 6px 6px;
+            font-size: 12px;
+            color: var(--purple3);
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--purple), var(--purple2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -30%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            height: 400px;
+            background: radial-gradient(ellipse, rgba(109,40,217,0.15) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-icon">📚</div>
+            <div class="sidebar-brand-name">QR<span>Library</span></div>
+        </div>
+
+        <!-- ✅ FIXED NAV — Role based links -->
+        <nav class="sidebar-nav">
+            @if (Context.Session.GetString("Role") == "Admin")
+            {
+                <a class="nav-item @(ViewData["Page"]?.ToString() == "admin" ? "active" : "")"
+                   asp-controller="Admin" asp-action="Index">
+                    <span class="ni">🏠</span> Dashboard
+                </a>
+                <a class="nav-item @(ViewData["Page"]?.ToString() == "reports" ? "active" : "")"
+                   asp-controller="Admin" asp-action="Reports">
+                    <span class="ni">📊</span> Reports
+                </a>
+            }
+            else
+            {
+                <a class="nav-item @(ViewData["Page"]?.ToString() == "dashboard" ? "active" : "")"
+                   asp-controller="Dashboard" asp-action="Index">
+                    <span class="ni">🏠</span> Dashboard
+                </a>
+                <a class="nav-item @(ViewData["Page"]?.ToString() == "scan" ? "active" : "")"
+                   asp-controller="Library" asp-action="Scan">
+                    <span class="ni">📷</span> Scan QR Code
+                </a>
+                <a class="nav-item @(ViewData["Page"]?.ToString() == "mybooks" ? "active" : "")"
+                   asp-controller="Library" asp-action="MyBooks">
+                    <span class="ni">📖</span> My Books
+                </a>
+                <a class="nav-item @(ViewData["Page"]?.ToString() == "return" ? "active" : "")"
+                   asp-controller="Library" asp-action="Return">
+                    <span class="ni">↩️</span> Return Book
+                </a>
+                <a class="nav-item @(ViewData["Page"]?.ToString() == "qrcodes" ? "active" : "")"
+                   asp-controller="Library" asp-action="QRCodes">
+                    <span class="ni">📋</span> QR Codes
+                </a>
+            }
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a class="logout-btn" asp-controller="Account" asp-action="Logout">
+                🚪 Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="main-wrap" style="position:relative;z-index:1;">
+        @RenderBody()
+    </div>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

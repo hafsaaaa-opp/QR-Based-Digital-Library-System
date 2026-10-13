@@ -1,0 +1,80 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["Page"] = "dashboard";
+}
+
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Welcome back, @ViewBag.StudentName 👋</p>
+    </div>
+    <div class="user-pill">
+        <div class="user-avatar">🎓</div>
+        @ViewBag.UniversityID
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">📖</div>
+        <div class="stat-value">@ViewBag.ActiveLoans</div>
+        <div class="stat-label">Active Loans</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-value">@ViewBag.TotalBooks</div>
+        <div class="stat-label">Total Books</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value">@ViewBag.Available</div>
+        <div class="stat-label">Available Now</div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="card">
+        <div class="card-title"><div class="dot"></div>Quick Actions</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <a asp-controller="Library" asp-action="Scan" style="text-decoration:none;">
+                <button class="btn-primary" style="width:100%;text-align:left;padding:14px 18px;">
+                    📷 &nbsp; Scan QR Code to Borrow
+                </button>
+            </a>
+            <a asp-controller="Library" asp-action="MyBooks" style="text-decoration:none;">
+                <button class="btn-ghost" style="width:100%;text-align:left;padding:14px 18px;">
+                    📖 &nbsp; View My Issued Books
+                </button>
+            </a>
+            <a asp-controller="Library" asp-action="Return" style="text-decoration:none;">
+                <button class="btn-ghost" style="width:100%;text-align:left;padding:14px 18px;">
+                    ↩️ &nbsp; Return a Book
+                </button>
+            </a>
+            <a href="/Recommendation/Index">🤖 AI Recommendations</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title"><div class="dot"></div>Borrowing Policy</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--muted);">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="color:var(--purple3);">📌</span> Maximum <strong style="color:var(--text);">3 books</strong> at a time
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="color:var(--purple3);">📅</span> Loan period: <strong style="color:var(--text);">14 days</strong>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="color:var(--purple3);">⚠️</span> Return before due date to avoid penalty
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="color:var(--purple3);">📷</span> Scan QR on book cover to borrow
+            </div>
+        </div>
+    </div>
+</div>
+@if (Context.Session.GetString("Role") == "Admin")
+{
+    <a href="/Analytics/Index">📊 Analytics Dashboard</a>
+
+}
